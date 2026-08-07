@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#075E54">
+<title>Produção Diária</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #efeae2;
+    color: #111;
+}
+
+.phone {
+    max-width: 500px;
+    margin: auto;
+    min-height: 100vh;
+    background: #efeae2;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: 65px;
+    background: #075e54;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,.2);
+}
+
+.avatar {
+    width: 43px;
+    height: 43px;
+    background: #dfe5e7;
+    color: #075e54;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 23px;
+    margin-right: 10px;
+}
+
+.title {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.status {
+    font-size: 12px;
+    margin-top: 3px;
+    opacity: .85;
+}
+
+.chat {
+    padding: 14px 10px 110px 10px;
+}
+
+.message {
+    background: white;
+    padding: 11px 12px;
+    border-radius: 8px;
+    margin-bottom: 9px;
+    max-width: 91%;
+    font-size: 14px;
+    line-height: 1.45;
+    box-shadow: 0 1px 1px rgba(0,0,0,.12);
+}
+
+.user-message {
+    background: #d9fdd3;
+    margin-left: auto;
+}
+
+.time {
+    display: block;
+    text-align: right;
+    color: #777;
+    font-size: 10px;
+    margin-top: 5px;
+}
+
+.options {
+    background: white;
+    border-radius: 9px;
+    padding: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.12);
+}
+
+button {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #eee;
+    background: white;
+    color: #007b6e;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 15px 8px;
+    cursor: pointer;
+    text-align: left;
+}
+
+button:last-child {
+    border-bottom: none;
+}
+
+button:active {
+    background: #eee;
+}
+
+.primary {
+    background: #008069;
+    color: white;
+    text-align: center;
+    border-radius: 7px;
+    margin-top: 7px;
+}
+
+.secondary {
+    color: #667781;
+}
+
+.danger {
+    color: #c0392b;
+}
+
+.input-area {
+    display: flex;
+    gap: 7px;
+    margin-top: 10px;
+}
+
+input {
+    flex: 1;
+    min-width: 0;
+    padding: 14px;
+    border: none;
+    border-radius: 22px;
+    font-size: 16px;
+    outline: none;
+}
+
+.send {
+    width: 49px;
+    height: 49px;
+    min-width: 49px;
+    padding: 0;
+    background: #008069;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 20px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 7px;
+    background: #e7f5f2;
+    color: #075e54;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.production {
+    font-size: 24px;
+    font-weight: bold;
+    color: #008069;
+}
+
+.summary {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 9px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.12);
+}
+
+.summary-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.summary-small {
+    font-size: 12px;
+    color: #667781;
+}
+
+.empty {
+    text-align: center;
+    color: #667781;
+    padding: 30px 10px;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+.bottom-info {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 500px;
+    margin: auto;
+    padding: 8px 10px;
+    background: #f0f2f5;
+    text-align: center;
+    color: #667781;
+    font-size: 11px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="phone">
+
+    <div class="topbar">
+        <div class="avatar">🏗️</div>
+        <div>
+            <div class="title">Produção Diária - Obra</div>
+            <div class="status">online</div>
+        </div>
+    </div>
+
+    <div class="chat" id="app"></div>
+
+</div>
+
+<div class="bottom-info">
+Protótipo de apontamento de produção
+</div>
+
+<script>
+
+// ======================================================
+// USUÁRIO SIMULADO
+// No sistema real será identificado pelo WhatsApp.
+// ======================================================
+
+const usuario = {
+    telefone: "11 99999-1234",
+    nome: "João Silva",
+    funcao: "Apontador"
+};
+
+
+// ======================================================
+// BANCO SIMULADO
+// ======================================================
+
+const tiposFrente = [
+
+{
+    id: 1,
+    nome: "Terraplenagem",
+    icone: "🚜",
+
+    frentes: [
+
+        {
+            id: 101,
+            nome: "Terraplenagem - Trecho 3A",
+
+            locais: [
+                "KM 67+700 ao 68+100",
+                "KM 68+100 ao 68+500",
+                "KM 68+500 ao 69+000"
+            ],
+
+            servicos: [
+                {id:1001, nome:"Escavação 1ª Categoria", unidade:"m³"},
+                {id:1002, nome:"Escavação 2ª Categoria", unidade:"m³"},
+                {id:1003, nome:"Aterro Compactado", unidade:"m³"},
+                {id:1004, nome:"Regularização de Subleito", unidade:"m²"},
+                {id:1005, nome:"Carga e Transporte", unidade:"m³"}
+            ]
+        },
+
+        {
+            id: 102,
+            nome: "Terraplenagem - Trecho 3B",
+
+            locais: [
+                "KM 69+000 ao 69+500",
+                "KM 69+500 ao 70+000",
+                "KM 70+000 ao 70+500"
+            ],
+
+            servicos: [
+                {id:1101, nome:"Escavação 1ª Categoria", unidade:"m³"},
+                {id:1102, nome:"Aterro Compactado", unidade:"m³"},
+                {id:1103, nome:"Regularização de Subleito", unidade:"m²"}
+            ]
+        }
+
+    ]
+},
+
+
+// ======================================================
+
+{
+    id: 2,
+    nome: "OAE",
+    icone: "🌉",
+
+    frentes: [
+
+        {
+            id: 201,
+            nome: "Ponte - KM 72+450",
+
+            locais: [
+                "Encontro 01",
+                "Encontro 02",
+                "Apoio Central",
+                "Tabuleiro"
+            ],
+
+            servicos: [
+                {id:2001, nome:"Escavação", unidade:"m³"},
+                {id:2002, nome:"Estaca", unidade:"m"},
+                {id:2003, nome:"Concreto Magro", unidade:"m³"},
+                {id:2004, nome:"Forma", unidade:"m²"},
+                {id:2005, nome:"Armação", unidade:"kg"},
+                {id:2006, nome:"Concreto Estrutural", unidade:"m³"}
+            ]
+        },
+
+        {
+            id: 202,
+            nome: "Viaduto - KM 81+300",
+
+            locais: [
+                "Encontro 01",
+                "Encontro 02",
+                "Pilar 01",
+                "Pilar 02",
+                "Tabuleiro"
+            ],
+
+            servicos: [
+                {id:2101, nome:"Escavação", unidade:"m³"},
+                {id:2102, nome:"Estaca", unidade:"m"},
+                {id:2103, nome:"Forma", unidade:"m²"},
+                {id:2104, nome:"Armação", unidade:"kg"},
+                {id:2105, nome:"Concreto Estrutural", unidade:"m³"}
+            ]
+        }
+
+    ]
+},
+
+
+// ======================================================
+
+{
+    id: 3,
+    nome: "Supressão Vegetal",
+    icone: "🌳",
+
+    frentes: [
+
+        {
+            id: 301,
+            nome: "Supressão - Trecho 2",
+
+            locais: [
+                "KM 55+000 ao 55+500",
+                "KM 55+500 ao 56+000",
+                "KM 56+000 ao 56+500"
+            ],
+
+            servicos: [
+                {id:3001, nome:"Supressão Vegetal", unidade:"m²"},
+                {id:3002, nome:"Destocamento", unidade:"m²"},
+                {id:3003, nome:"Limpeza da Área", unidade:"m²"}
+            ]
+        },
+
+        {
+            id: 302,
+            nome: "Supressão - Trecho 3",
+
+            locais: [
+                "KM 67+000 ao 67+500",
+                "KM 67+500 ao 68+000",
+                "KM 68+000 ao 68+500"
+            ],
+
+            servicos: [
+                {id:3101, nome:"Supressão Vegetal", unidade:"m²"},
+                {id:3102, nome:"Destocamento", unidade:"m²"},
+                {id:3103, nome:"Limpeza da Área", unidade:"m²"}
+            ]
+        }
+
+    ]
+},
+
+
+// ======================================================
+
+{
+    id: 4,
+    nome: "Drenagem",
+    icone: "💧",
+
+    frentes: [
+
+        {
+            id: 401,
+            nome: "Drenagem - Trecho 3A",
+
+            locais: [
+                "KM 67+700",
+                "KM 68+050",
+                "KM 68+400",
+                "KM 68+850"
+            ],
+
+            servicos: [
+                {id:4001, nome:"Tubo Ø 600 mm", unidade:"m"},
+                {id:4002, nome:"Tubo Ø 800 mm", unidade:"m"},
+                {id:4003, nome:"Caixa de Drenagem", unidade:"un"},
+                {id:4004, nome:"Sarjeta", unidade:"m"},
+                {id:4005, nome:"Meio-fio", unidade:"m"}
+            ]
+        }
+
+    ]
+}
+
+];
+
+
+// ======================================================
+// VARIÁVEIS
+// ======================================================
+
+let tipoSelecionado = null;
+let frenteSelecionada = null;
+let servicoSelecionado = null;
+let localSelecionado = null;
+let quantidade = null;
+
+const app = document.getElementById("app");
+
+
+// ======================================================
+// UTILIDADES
+// ======================================================
+
+function hoje(){
+    return new Date().toLocaleDateString("pt-BR");
+}
+
+function hora(){
+    return new Date().toLocaleTimeString(
+        "pt-BR",
+        {hour:"2-digit", minute:"2-digit"}
+    );
+}
+
+function bot(texto){
+    return `
+    <div class="message">
+        ${texto}
+        <span class="time">${hora()}</span>
+    </div>`;
+}
+
+function usuarioMsg(texto){
+    return `
+    <div class="message user-message">
+        ${texto}
+        <span class="time">${hora()} ✓✓</span>
+    </div>`;
+}
+
+
+// ======================================================
+// INÍCIO
+// ======================================================
+
+function inicio(){
+
+    app.innerHTML =
+
+    bot(`
+        Olá, <b>${usuario.nome}</b>! 👋
+        <br><br>
+
+        Identifiquei você pelo número:
+        <br>
+        📱 ${usuario.telefone}
+
+        <br><br>
+
+        <b>Produção diária</b>
+        <br>
+        📅 ${hoje()}
+
+        <br><br>
+
+        O que deseja fazer?
+    `)
+
+    +
+
+    `<div class="options">
+
+        <button onclick="selecionarTipo()">
+            ➕ Lançar produção
+        </button>
+
+        <button onclick="verLancamentos()">
+            📋 Meus lançamentos de hoje
+        </button>
+
+    </div>`;
+
+}
+
+
+// ======================================================
+// TIPO DE FRENTE
+// ======================================================
+
+function selecionarTipo(){
+
+    let html = bot(`
+        Selecione o <b>tipo de frente</b>:
+    `);
+
+    html += `<div class="options">`;
+
+    tiposFrente.forEach(tipo => {
+
+        html += `
+        <button onclick="selecionarFrente(${tipo.id})">
+            ${tipo.icone} ${tipo.nome}
+        </button>`;
+
+    });
+
+    html += `
+        <button class="secondary" onclick="inicio()">
+            ⬅ Voltar
+        </button>
+    </div>`;
+
+    app.innerHTML = html;
+}
+
+
+// ======================================================
+// FRENTE
+// ======================================================
+
+function selecionarFrente(idTipo){
+
+    tipoSelecionado =
+        tiposFrente.find(t => t.id === idTipo);
+
+    let html =
+
+    usuarioMsg(
+        tipoSelecionado.icone +
+        " " +
+        tipoSelecionado.nome
+    )
+
+    +
+
+    bot(`
+        Agora selecione a <b>frente de serviço</b>:
+    `);
+
+    html += `<div class="options">`;
+
+    tipoSelecionado.frentes.forEach(frente => {
+
+        html += `
+        <button onclick="selecionarServico(${frente.id})">
+            🏗️ ${frente.nome}
+        </button>`;
+
+    });
+
+    html += `
+        <button class="secondary" onclick="selecionarTipo()">
+            ⬅ Voltar
+        </button>
+    </div>`;
+
+    app.innerHTML = html;
+
+}
+
+
+// ======================================================
+// SERVIÇO
+// ======================================================
+
+function selecionarServico(idFrente){
+
+    frenteSelecionada =
+        tipoSelecionado.frentes.find(
+            f => f.id === idFrente
+        );
+
+    let html =
+
+    usuarioMsg(frenteSelecionada.nome)
+
+    +
+
+    bot(`
+        Selecione o <b>serviço executado</b>:
+    `);
+
+    html += `<div class="options">`;
+
+    frenteSelecionada.servicos.forEach(servico => {
+
+        html += `
+        <button onclick="selecionarLocal(${servico.id})">
+
+            ${servico.nome}
+
+            <br>
+
+            <span style="
+                font-size:11px;
+                font-weight:normal;
+                color:#667781;
+            ">
+                Unidade: ${servico.unidade}
+            </span>
+
+        </button>`;
+
+    });
+
+    html += `
+        <button class="secondary"
+        onclick="selecionarFrente(${tipoSelecionado.id})">
+            ⬅ Voltar
+        </button>
+    </div>`;
+
+    app.innerHTML = html;
+
+}
+
+
+// ======================================================
+// LOCAL
+// ======================================================
+
+function selecionarLocal(idServico){
+
+    servicoSelecionado =
+        frenteSelecionada.servicos.find(
+            s => s.id === idServico
+        );
+
+    let html =
+
+    usuarioMsg(servicoSelecionado.nome)
+
+    +
+
+    bot(`
+        Onde o serviço foi executado?
+        <br><br>
+        Selecione o <b>KM / Local</b>:
+    `);
+
+    html += `<div class="options">`;
+
+    frenteSelecionada.locais.forEach(
+        (local, index) => {
+
+        html += `
+        <button onclick="informarQuantidade(${index})">
+            📍 ${local}
+        </button>`;
+
+    });
+
+    html += `
+        <button class="secondary"
+        onclick="selecionarServico(${frenteSelecionada.id})">
+            ⬅ Voltar
+        </button>
+    </div>`;
+
+    app.innerHTML = html;
+
+}
+
+
+// ======================================================
+// QUANTIDADE
+// ======================================================
+
+function informarQuantidade(index){
+
+    localSelecionado =
+        frenteSelecionada.locais[index];
+
+    app.innerHTML =
+
+    usuarioMsg("📍 " + localSelecionado)
+
+    +
+
+    bot(`
+        Informe a produção realizada.
+
+        <br><br>
+
+        <span class="badge">
+            ${servicoSelecionado.nome}
+        </span>
+
+        <br>
+
+        Unidade:
+        <b>${servicoSelecionado.unidade}</b>
+    `)
+
+    +
+
+    `
+    <div class="input-area">
+
+        <input
+            id="quantidade"
+            type="number"
+            inputmode="decimal"
+            step="0.01"
+            placeholder="Quantidade">
+
+        <button class="send"
+        onclick="confirmarQuantidade()">
+            ➤
+        </button>
+
+    </div>
+
+    <div class="options" style="margin-top:10px">
+
+        <button class="secondary"
+        onclick="selecionarLocal(${servicoSelecionado.id})">
+            ⬅ Voltar
+        </button>
+
+    </div>
+    `;
+
+    setTimeout(() => {
+        document.getElementById("quantidade").focus();
+    }, 200);
+
+}
+
+
+// ======================================================
+// CONFIRMAR QUANTIDADE
+// ======================================================
+
+function confirmarQuantidade(){
+
+    const input =
+        document.getElementById("quantidade");
+
+    quantidade =
+        parseFloat(input.value);
+
+    if(!quantidade || quantidade <= 0){
+
+        alert("Informe uma quantidade válida.");
+
+        return;
+    }
+
+    app.innerHTML =
+
+    usuarioMsg(
+        quantidade.toLocaleString("pt-BR") +
+        " " +
+        servicoSelecionado.unidade
+    )
+
+    +
+
+    bot(`
+        <b>CONFIRMAR PRODUÇÃO</b>
+
+        <hr>
+
+        👤 <b>Responsável</b>
+        <br>
+        ${usuario.nome}
+
+        <br><br>
+
+        ${tipoSelecionado.icone}
+        <b>Tipo de frente</b>
+        <br>
+        ${tipoSelecionado.nome}
+
+        <br><br>
+
+        🏗️ <b>Frente</b>
+        <br>
+        ${frenteSelecionada.nome}
+
+        <br><br>
+
+        🔧 <b>Serviço</b>
+        <br>
+        ${servicoSelecionado.nome}
+
+        <br><br>
+
+        📍 <b>Local</b>
+        <br>
+        ${localSelecionado}
+
+        <br><br>
+
+        📊 <b>Produção</b>
+        <br>
+
+        <span class="production">
+            ${quantidade.toLocaleString("pt-BR")}
+            ${servicoSelecionado.unidade}
+        </span>
+
+        <br><br>
+
+        As informações estão corretas?
+    `)
+
+    +
+
+    `
+    <div class="options">
+
+        <button onclick="salvar()">
+            ✅ CONFIRMAR
+        </button>
+
+        <button class="secondary"
+        onclick="informarQuantidade(
+            frenteSelecionada.locais.indexOf(localSelecionado)
+        )">
+            ✏️ Corrigir quantidade
+        </button>
+
+        <button class="danger"
+        onclick="inicio()">
+            ❌ Cancelar lançamento
+        </button>
+
+    </div>
+    `;
+
+}
+
+
+// ======================================================
+// SALVAR
+// ======================================================
+
+function salvar(){
+
+    let dados =
+        JSON.parse(
+            localStorage.getItem("producoes_mobile")
+            || "[]"
+        );
+
+    dados.push({
+
+        id: Date.now(),
+
+        data: hoje(),
+
+        hora: hora(),
+
+        telefone: usuario.telefone,
+
+        usuario: usuario.nome,
+
+        tipo: tipoSelecionado.nome,
+
+        frente: frenteSelecionada.nome,
+
+        servico: servicoSelecionado.nome,
+
+        local: localSelecionado,
+
+        unidade: servicoSelecionado.unidade,
+
+        quantidade: quantidade
+
+    });
+
+    localStorage.setItem(
+        "producoes_mobile",
+        JSON.stringify(dados)
+    );
+
+
+    app.innerHTML =
+
+    bot(`
+        ✅ <b>Produção registrada com sucesso!</b>
+
+        <br><br>
+
+        ${tipoSelecionado.icone}
+        ${tipoSelecionado.nome}
+
+        <br>
+
+        🏗️ ${frenteSelecionada.nome}
+
+        <br>
+
+        🔧 ${servicoSelecionado.nome}
+
+        <br>
+
+        📍 ${localSelecionado}
+
+        <br><br>
+
+        <span class="production">
+            ${quantidade.toLocaleString("pt-BR")}
+            ${servicoSelecionado.unidade}
+        </span>
+    `)
+
+    +
+
+    `
+    <div class="options">
+
+        <button
+        onclick="selecionarServico(${frenteSelecionada.id})">
+            ➕ Outro serviço nesta frente
+        </button>
+
+        <button
+        onclick="selecionarFrente(${tipoSelecionado.id})">
+            🏗️ Outra frente de ${tipoSelecionado.nome}
+        </button>
+
+        <button onclick="selecionarTipo()">
+            🔄 Outro tipo de frente
+        </button>
+
+        <button onclick="verLancamentos()">
+            📋 Ver lançamentos de hoje
+        </button>
+
+        <button class="secondary"
+        onclick="inicio()">
+            🏠 Finalizar
+        </button>
+
+    </div>
+    `;
+
+}
+
+
+// ======================================================
+// VER LANÇAMENTOS
+// ======================================================
+
+function verLancamentos(){
+
+    let dados =
+        JSON.parse(
+            localStorage.getItem("producoes_mobile")
+            || "[]"
+        );
+
+    dados =
+        dados.filter(
+            d => d.data === hoje()
+        );
+
+    let html =
+
+    bot(`
+        📋 <b>SEUS LANÇAMENTOS DE HOJE</b>
+        <br>
+        ${hoje()}
+    `);
+
+
+    if(dados.length === 0){
+
+        html += `
+        <div class="empty">
+            Nenhuma produção lançada hoje.
+        </div>
+        `;
+
+    }
+
+
+    dados
+    .slice()
+    .reverse()
+    .forEach(d => {
+
+        html += `
+
+        <div class="summary">
+
+            <div class="summary-title">
+                ${d.servico}
+            </div>
+
+            <div class="summary-small">
+
+                ${d.tipo}
+                <br>
+
+                ${d.frente}
+                <br>
+
+                📍 ${d.local}
+
+            </div>
+
+            <br>
+
+            <span class="production">
+
+                ${Number(d.quantidade)
+                .toLocaleString("pt-BR")}
+
+                ${d.unidade}
+
+            </span>
+
+            <br><br>
+
+            <span class="summary-small">
+
+                🕐 ${d.hora}
+                &nbsp;•&nbsp;
+                👤 ${d.usuario}
+
+            </span>
+
+            <br><br>
+
+            <button
+            class="danger"
+            onclick="excluir(${d.id})">
+                🗑️ Excluir lançamento
+            </button>
+
+        </div>
+
+        `;
+
+    });
+
+
+    html += `
+
+    <div class="options">
+
+        <button onclick="selecionarTipo()">
+            ➕ Lançar nova produção
+        </button>
+
+        <button class="secondary"
+        onclick="inicio()">
+            🏠 Menu inicial
+        </button>
+
+    </div>
+
+    `;
+
+    app.innerHTML = html;
+
+}
+
+
+// ======================================================
+// EXCLUIR
+// ======================================================
+
+function excluir(id){
+
+    if(!confirm(
+        "Deseja realmente excluir este lançamento?"
+    )) return;
+
+
+    let dados =
+        JSON.parse(
+            localStorage.getItem("producoes_mobile")
+            || "[]"
+        );
+
+
+    dados =
+        dados.filter(
+            d => d.id !== id
+        );
+
+
+    localStorage.setItem(
+        "producoes_mobile",
+        JSON.stringify(dados)
+    );
+
+
+    verLancamentos();
+
+}
+
+
+// ======================================================
+// INICIAR
+// ======================================================
+
+inicio();
+
+</script>
+
+</body>
+</html>
